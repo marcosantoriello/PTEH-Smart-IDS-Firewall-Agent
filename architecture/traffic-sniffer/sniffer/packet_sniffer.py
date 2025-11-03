@@ -8,6 +8,25 @@ from .logger_config import setup_logger
 from .packet_processor import PacketProcessor
 import signal
 import sys
+import requests
+
+
+def notify_feature_extraction(filename, base_url='http://feature_extractor:5000'):
+    """
+    Notifies the feature extractor that a new pcap has been saved and 
+    sends the path to this new file.
+    """
+    path = f"/shared/pcap/{filename}"
+    data = {'filename': filename, 'path': path}
+
+    try:
+        r = requests.post(f"{base_url}/new_pcap", json=data)
+        if r.status_code == 200:
+            print(f"Notification sent: {filename}")
+        else:
+            print(f"There was an error sending the notification: {r.text}")
+    except Exception as e:
+        print(f"API call error: {e}")
 
 class TrafficSniffer:
 
@@ -66,6 +85,7 @@ class TrafficSniffer:
             # save every 100 packets
             if len(self.packets_buffer) >= 100:
                 wrpcap('logs/capture.pcap', self.packets_buffer)
+                notify_feature_extraction()
                 self.packets_buffer = []
 
 
@@ -104,8 +124,8 @@ class TrafficSniffer:
     def print_statistics(self):
         """Prints final stats"""
         self.logger.info("="*60)
-        self.logger.info("📊 Statistiche finali:")
-        self.logger.info(f"   Pacchetti catturati: {self.processor.packet_count}")
+        self.logger.info("📊 Final stats:")
+        self.logger.info(f"   Captured packets: {self.processor.packet_count}")
         self.logger.info("="*60)
 
     
