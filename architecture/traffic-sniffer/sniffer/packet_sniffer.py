@@ -48,7 +48,7 @@ class TrafficSniffer:
         self.print_statistics()
         sys.exit(0)
 
-    def notify_feature_extraction(self, filename, base_url='http://feature_extractor:5000'):
+    def notify_feature_extraction(self, filename, base_url='http://localhost:5000'):
         """
         Notifies the feature extractor that a new pcap has been saved and 
         sends the path to this new file.
@@ -92,7 +92,7 @@ class TrafficSniffer:
                 filepath = f"/shared/pcap/{filename}"
 
                 wrpcap(filepath, self.packets_buffer)
-                notify_feature_extraction(filename)
+                self.notify_feature_extraction(filename)
 
                 self.packets_buffer = []
 
