@@ -1,4 +1,13 @@
 services:
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+
   traffic-sniffer:
     build:
       context: ./traffic-sniffer
@@ -38,10 +47,15 @@ services:
       - NET_RAW
     
     environment:
+      - REDIS_HOST=localhost
+      - REDIS_PORT=6379
       - FLOW_TIMEOUT=120
       - ACTIVITY_TIMEOUT=5
       - INTERFACE=docker0
       # - PCAP_INPUT=/app/input/capture.pcap
+
+    depends_on:
+      - redis
     
     volumes:
       - shared-pcap-data:/shared/pcap
@@ -59,3 +73,4 @@ services:
         
 volumes:
   shared-pcap-data:
+  redis_data:

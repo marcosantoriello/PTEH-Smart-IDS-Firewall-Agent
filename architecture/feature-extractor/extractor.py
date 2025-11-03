@@ -4,7 +4,14 @@ import subprocess
 import tempfile
 import threading
 import logging
+import redis
 from flask import Flask, request, jsonify
+
+REDIS_HOST = os.getenv("REDIS_HOST", "redis")
+REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
+
+redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
+
 
 app = Flask(__name__)
 
@@ -19,12 +26,17 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-def extract_traffic_features(pcap_path, output_path="/app/output/features.csv", base_config_path="config.json"):
+def extract_traffic_features(pcap_path, base_config_path="config.json"):
     """
         Extracts network features from the input pcap.
     """
 
     try:
+        # the filename of the output is taken from the input filename
+        base_name = os.path.splitext(os.path.basename(pcap_path))[0]
+        output_filename = f"{base_name}.csv"
+        output_path = os.path.join("/app/output", output_filename)
+
         with open(base_config_path, 'r') as f:
             config = json.load(f)
 
@@ -43,11 +55,25 @@ def extract_traffic_features(pcap_path, output_path="/app/output/features.csv", 
         subprocess.run(['ntlflowlyzer', '-c', temp_config_path], check=True)
         os.remove(temp_config_path)
 
+        redis_key = f"features:{output_filename}"
+        upload_csv_to_redis(output_path, redis_key)
+
         logger.info(f"Feature extraction completed successfully for {pcap_path}")   
     except subprocess.CalledProcessError as e:
         logger.error(f"Extraction failed for {pcap_path} with error: {e}")
     except Exception as e:
         logger.error(f"Unexpected error during extraction for {pcap_path}: {e}")
+
+
+def upload_csv_to_redis(csv_path, redis_key):
+    logger.info(f"Uploading CSV {csv_path} to Redis with key {redis_key}")
+    try:
+        with open(csv_path, 'r') as f:
+            csv_content = f.read()
+        redis_client.set(redis_key, csv_content)
+        logger.info(f"CSV data uploaded to Redis successfully under key {redis_key}")
+    except Exception as e:
+        logger.error(f"Failed to upload CSV to Redis: {e}")
 
 
 
