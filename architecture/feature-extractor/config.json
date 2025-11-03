@@ -1,0 +1,7 @@
+{
+    "pcap_file_address": "/app/input/capture.pcap",
+    "output_file_address": "/app/output/features.csv",
+    "label": "Unknown",
+    "flow_timeout": 120,
+    "activity_timeout": 5
+}
