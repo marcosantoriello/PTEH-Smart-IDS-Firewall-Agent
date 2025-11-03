@@ -61,7 +61,7 @@ class TrafficSniffer:
             if r.status_code == 200:
                 self.logger.info(f"Notification sent successfully for file: {filename}")
             else:
-                self.logger.error(f"Failed to send notification for {filename}: {response.text}")
+                self.logger.error(f"Failed to send notification for {filename}: {r.text}")
         except Exception as e:
             self.logger.error(f"API call error while notifying feature extractor for {filename}: {e}")
 
