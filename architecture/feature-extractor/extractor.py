@@ -1,5 +1,7 @@
+import json
 import os
 import subprocess
+import tempfile
 import threading
 import logging
 from flask import Flask, request, jsonify
@@ -17,10 +19,30 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-def extract_traffic_features(pcap_path):
-    logger.info(f"Starting feature extraction for {pcap_path}")
+def extract_traffic_features(pcap_path, output_path="/app/output/features.csv", base_config_path="config.json"):
+    """
+        Extracts network features from the input pcap.
+    """
+
     try:
-        subprocess.run(['ntlflowlyzer', '-c', 'config.json'], check=True)
+        with open(base_config_path, 'r') as f:
+            config = json.load(f)
+
+        config['pcap_file_address'] = pcap_path
+        config['output_file_address'] = output_path
+        
+        # using a temporary config file to avoid concurrency issues
+        with tempfile.NamedTemporaryFile(mode='w+', suffix='.json', delete=False) as temp_config_file:
+            json.dump(config, temp_config_file, indent=2)
+            temp_config_file.flush()
+            temp_config_path = temp_config_file.name
+
+        logger.info(f"Using temporary config file: {temp_config_path}")
+        logger.info(f"Starting feature extraction for {pcap_path}")
+    
+        subprocess.run(['ntlflowlyzer', '-c', temp_config_path], check=True)
+        os.remove(temp_config_path)
+
         logger.info(f"Feature extraction completed successfully for {pcap_path}")   
     except subprocess.CalledProcessError as e:
         logger.error(f"Extraction failed for {pcap_path} with error: {e}")
