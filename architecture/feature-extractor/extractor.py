@@ -6,6 +6,7 @@ import threading
 import logging
 import redis
 from flask import Flask, request, jsonify
+from datetime import datetime
 
 REDIS_HOST = os.getenv("REDIS_HOST", "redis")
 REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
@@ -28,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 def extract_traffic_features(pcap_path, base_config_path="config.json"):
     """
-        Extracts network features from the input pcap.
+        Extract network features from the input pcap.
     """
 
     try:
@@ -65,12 +66,30 @@ def extract_traffic_features(pcap_path, base_config_path="config.json"):
         logger.error(f"Unexpected error during extraction for {pcap_path}: {e}")
 
 
+def extract_timestamp_from_filename(filename: str):
+    """
+        Extract Unix timestamp from 'features:capture_YYYYMMDD_HHMMSS.csv'
+    """
+    name = filename.replace(".csv", "")
+    parts = name.split("_")
+    dt = datetime.strptime(parts[1] + parts[2], '%Y%m%d%H%M%S')
+
+    return dt.timestamp()
+
+
+
 def upload_csv_to_redis(csv_path, redis_key):
+    """
+        Save the .csv in Redis and saves the timestamp in the Redis sorted set 'features_index'
+    """
     logger.info(f"Uploading CSV {csv_path} to Redis with key {redis_key}")
     try:
         with open(csv_path, 'r') as f:
             csv_content = f.read()
         redis_client.set(redis_key, csv_content)
+
+        timestamp = extract_timestamp_from_filename(redis_key)
+        redis_client.zadd("features_index", {redis_key: timestamp})
         logger.info(f"CSV data uploaded to Redis successfully under key {redis_key}")
     except Exception as e:
         logger.error(f"Failed to upload CSV to Redis: {e}")
