@@ -88,17 +88,17 @@ services:
 
     depends_on:
       - redis
-      - feature_extractor
+      - feature-extractor
 
     volumes:
       - ../notebook/models/v1:/app/model
       - ./ids/logs:/app/logs
       - ./architecture/utils:/app/utils
 
-    restart: unless_stopped
+    restart: unless-stopped
 
     logging:
-      driver: "json_file"
+      driver: "json-file"
       options:
         max-size: "5m"
         max-file: "2"
