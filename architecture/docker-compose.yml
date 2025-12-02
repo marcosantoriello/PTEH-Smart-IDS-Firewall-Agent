@@ -26,6 +26,7 @@ services:
     volumes:
       - ./traffic-sniffer/logs:/app/logs
       - shared-pcap-data:/shared/pcap
+      - ./architecture/utils:/app/utils
     
     restart: unless-stopped
     
@@ -62,6 +63,7 @@ services:
       - ./feature-extractor/output:/app/output
       - ./feature-extractor/config.json:/app/config.json
       - ./feature-extractor/logs:/app/logs
+      - ./architecture/utils:/app/utils
     
     restart: unless-stopped
     
@@ -91,6 +93,7 @@ services:
     volumes:
       - ../notebook/models/v1:/app/model
       - ./ids/logs:/app/logs
+      - ./architecture/utils:/app/utils
 
     restart: unless_stopped
 
