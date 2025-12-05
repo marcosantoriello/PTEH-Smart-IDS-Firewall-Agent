@@ -83,7 +83,7 @@ services:
 
     environment:
       - REDIS_HOST=localhost
-      - REDIST_PORT=6379
+      - REDIS_PORT=6379
       - POLLING_INTERVAL=10
 
     depends_on:
@@ -91,7 +91,7 @@ services:
       - feature-extractor
 
     volumes:
-      - ../notebook/models/v1:/app/model
+      - ../notebook/models/v1/rf_ids_binary_model.pkl:/app/model/model.pkl
       - ./ids/logs:/app/logs
       - ./utils:/app/utils
 
