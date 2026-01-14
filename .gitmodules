@@ -1,3 +1,0 @@
-[submodule "architecture/feature-extractor/libs/NTLFlowLyzer"]
-	path = architecture/feature-extractor/libs/NTLFlowLyzer
-	url = https://github.com/ahlashkari/NTLFlowLyzer.git
