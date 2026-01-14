@@ -26,6 +26,7 @@ services:
     volumes:
       - ./traffic-sniffer/logs:/app/logs
       - shared-pcap-data:/shared/pcap
+      - ./utils:/app/utils
     
     restart: unless-stopped
     
@@ -62,6 +63,7 @@ services:
       - ./feature-extractor/output:/app/output
       - ./feature-extractor/config.json:/app/config.json
       - ./feature-extractor/logs:/app/logs
+      - ./utils:/app/utils
     
     restart: unless-stopped
     
@@ -70,6 +72,37 @@ services:
       options:
         max-size: "5m"
         max-file: "2"
+  
+  ids:
+    build:
+      context: ./ids
+      dockerfile: Dockerfile
+    container_name: ids
+
+    network_mode: "host"
+
+    environment:
+      - REDIS_HOST=localhost
+      - REDIS_PORT=6379
+      - POLLING_INTERVAL=10
+
+    depends_on:
+      - redis
+      - feature-extractor
+
+    volumes:
+      - ../notebook/models/v1/rf_ids_binary_model.pkl:/app/model/model.pkl
+      - ./ids/logs:/app/logs
+      - ./utils:/app/utils
+
+    restart: unless-stopped
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
         
 volumes:
   shared-pcap-data:
